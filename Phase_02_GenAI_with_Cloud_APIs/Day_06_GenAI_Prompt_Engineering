@@ -1,1 +1,559 @@
 
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "xmGh2UwHdbpN",
+        "outputId": "d689261c-f9ba-4875-bb8f-6b7722fff2c5"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\u001b[?25l   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m0.0/143.7 kB\u001b[0m \u001b[31m?\u001b[0m eta \u001b[36m-:--:--\u001b[0m\r\u001b[2K   \u001b[90m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\u001b[0m \u001b[32m143.7/143.7 kB\u001b[0m \u001b[31m4.0 MB/s\u001b[0m eta \u001b[36m0:00:00\u001b[0m\n",
+            "\u001b[?25h"
+          ]
+        }
+      ],
+      "source": [
+        "!pip install groq --quiet"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import os\n",
+        "import json\n",
+        "import re\n",
+        "import time\n",
+        "import pandas as pd\n",
+        "import warnings\n",
+        "warnings.filterwarnings('ignore')\n",
+        "\n",
+        "print('Imported')"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "6NXIV-h3kfWz",
+        "outputId": "68a510b5-2aa9-44c3-9feb-d0613350e3ed"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Imported\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from groq import Groq\n",
+        "API_KEY=\"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\"\n",
+        "client=Groq(api_key=API_KEY)\n",
+        "MODEL=\"llama-3.1-8b-instant\"\n",
+        "print(f'Groq client configured with model:{MODEL}')"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "A5cPwtj4kxpc",
+        "outputId": "3b232289-230e-4635-de34-c71e9a853cb5"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Groq client configured with model:llama-3.1-8b-instant\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def ask_llm(user_message, system_message=\"You are a helpful assistant\",temperature=0.7,max_token=500):\n",
+        "  \"\"\"\n",
+        "  user_message : The message from the user to the assistant.\n",
+        "  system_message : The system-level instructions for the assistant.\n",
+        "  temperature : The sampling temperature for the model.\n",
+        "  max_token : The maximum number of tokens to generate.\n",
+        "  \"\"\"\n",
+        "\n",
+        "\n",
+        "  response=client.chat.completions.create(\n",
+        "      model=MODEL,\n",
+        "      messages=[\n",
+        "          {\"role\":\"system\",\"content\":system_message},\n",
+        "          {\"role\":\"user\",\"content\":user_message}\n",
+        "      ],\n",
+        "      temperature=temperature,\n",
+        "      max_tokens=max_token\n",
+        "  )\n",
+        "  return response.choices[0].message.content\n",
+        "\n",
+        "test_response=ask_llm(\"What is the capital of India?\")\n",
+        "test_response2=ask_llm(\"What is the capital of TamilNadu?\")\n",
+        "print(test_response)\n",
+        "print(test_response2)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "pFnRXielocQI",
+        "outputId": "31678fd1-c08b-41a5-a0c2-e7d6fe5ee8ca"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "The capital of India is New Delhi.\n",
+            "The capital of Tamil Nadu is Chennai.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "response_etl=ask_llm(\n",
+        "    \"IN 3 bullet points, explain how the Medallion Architecture\"\n",
+        "    \"(Bronze,Silver,Gold Layers) relates to ETL pipelines\",\n",
+        "    system_message=\"You are a senior data engineering insturctor.\"\n",
+        "                   \"Be concise and practical.\"\n",
+        ")\n",
+        "print(\"Medallion + ETL connection:\")\n",
+        "print(response_etl)\n",
+        "print()\n",
+        "print('Token explanation')\n",
+        "print(\"The model above used approximately\", len(response_etl.split())*1.3,'tokens,')"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "HZNjIZwc1NaY",
+        "outputId": "a14d83a1-db26-4e6c-8a6b-2c15c5d121aa"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Medallion + ETL connection:\n",
+            "Here are 3 key points explaining the relationship between the Medallion Architecture (Bronze, Silver, Gold Layers) and ETL pipelines:\n",
+            "\n",
+            "• **Bronze Layer (Raw Data Ingestion)**: The Bronze layer is where raw data is ingested in its original form. This is typically the source system or data feed, and ETL pipelines in this layer are responsible for collecting and loading data from these sources. This layer is the input to the ETL pipeline.\n",
+            "\n",
+            "• **Silver Layer (Data Processing and Quality Control)**: The Silver layer is where data is processed, transformed, and quality-checked. ETL pipelines in this layer are responsible for cleaning, aggregating, and enriching data to meet business requirements. This layer is where data is refined and made ready for analysis.\n",
+            "\n",
+            "• **Gold Layer (Data Warehousing and Reporting)**: The Gold layer is where data is stored in a data warehouse or a data mart, and ETL pipelines in this layer focus on loading data into these systems. This layer is where data is optimized for querying and analysis, and ETL pipelines here are designed to support reporting, analytics, and business intelligence.\n",
+            "\n",
+            "Token explanation\n",
+            "The model above used approximately 234.0 tokens,\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "zero_shot_response=ask_llm(\n",
+        "    \"Extract the city name from this address: \"\n",
+        "    \"456 Brigade Road, Bangalore 560025, Karnataka,India\"\n",
+        ")\n",
+        "print('Zero-Shot Result:')\n",
+        "print(zero_shot_response)\n",
+        "print()\n",
+        "ambiguous_response = ask_llm(\"Clean this data: ramesh kumar,45000,mumbai\")\n",
+        "print('Ambiguous Result:')\n",
+        "print(ambiguous_response)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "BujbL3zX9y7y",
+        "outputId": "ad0d0eb7-9fc7-4df3-d02b-80afb310efa8"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Zero-Shot Result:\n",
+            "The city name is Bangalore.\n",
+            "\n",
+            "Ambiguous Result:\n",
+            "Based on the given data \"ramesh kumar,45000,mumbai\", it appears to be a set of details in the format of \"Name,Salary,City\". To clean this data, I would suggest the following:\n",
+            "\n",
+            "1. **Split the data into individual fields**:\n",
+            "   - Name: ramesh kumar\n",
+            "   - Salary: 45000\n",
+            "   - City: mumbai\n",
+            "\n",
+            "2. **Standardize the city name**:\n",
+            "   - Some cities have multiple names or variations. In this case, \"mumbai\" seems to be the standardized version of the city. However, if you're working with a larger dataset, you might need to standardize city names using a dictionary or a mapping.\n",
+            "\n",
+            "3. **Format the salary**:\n",
+            "   - The salary is given as a number. However, for data consistency, you might want to format it as a string with commas or another format, depending on your requirements.\n",
+            "\n",
+            "Here's the cleaned data:\n",
+            "\n",
+            "- Name: ramesh kumar\n",
+            "- Salary: ₹45,000 (Indian rupees with commas)\n",
+            "- City: Mumbai (standardized city name)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "\n",
+        "few_shot_prompt=\"\"\"\n",
+        "Convert employee text to JSON. Here are examples:\n",
+        "Input:RAMESH KUMAR,45000,mumbai\n",
+        "Output:{\"name\":\"RAMESH KUMAR\",\"salary\":45000,\"city\":\"mumbai\"}\n",
+        "Input:ramesh kumar,45000,Delhi\n",
+        "Output:{\"name\":\"ramesh kumar\",\"salary\":45000,\"city\":\"Delhi\"}\n",
+        "Now convert this:\n",
+        "Input: ANANYA DAS, 38000 , kolkata\n",
+        "Output:\"\"\"\n",
+        "few_shot_response=ask_llm(few_shot_prompt,temperature=0.0)\n",
+        "print('Few-Shot Result:')\n",
+        "print(few_shot_response)\n",
+        "print()\n",
+        "try:\n",
+        "  parsed=json.loads(few_shot_prompt.strip())\n",
+        "  print('Successfully parsed as JSON')\n",
+        "  print(f'Name:{parsed['name']},Salary:{parsed['salary']},City:{parsed[\"city\"]}')\n",
+        "except json.JSONDecodeError:\n",
+        "  print('Parsing failed-model added extra text')\n",
+        "  print('Solution: add explicit instructions in the system prompt')"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "57c0qXMO_W9G",
+        "outputId": "f37b7e16-7635-4dc2-c6ac-fd43a1249cc1"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Few-Shot Result:\n",
+            "To convert the employee text to JSON, we can use the following Python code:\n",
+            "\n",
+            "```python\n",
+            "import json\n",
+            "\n",
+            "def convert_to_json(input_str):\n",
+            "    # Split the input string into a list of values\n",
+            "    values = input_str.replace(\",\", \" \").split()\n",
+            "    \n",
+            "    # Create a dictionary with the values\n",
+            "    employee = {\n",
+            "        \"name\": values[0],\n",
+            "        \"salary\": int(values[1]),\n",
+            "        \"city\": values[2]\n",
+            "    }\n",
+            "    \n",
+            "    # Convert the dictionary to JSON\n",
+            "    json_str = json.dumps(employee)\n",
+            "    \n",
+            "    return json_str\n",
+            "\n",
+            "input_str = \"ANANYA DAS, 38000, kolkata\"\n",
+            "output = convert_to_json(input_str)\n",
+            "print(output)\n",
+            "```\n",
+            "\n",
+            "When you run this code, it will output:\n",
+            "\n",
+            "```json\n",
+            "{\"name\": \"ANANYA DAS\", \"salary\": 38000, \"city\": \"kolkata\"}\n",
+            "```\n",
+            "\n",
+            "This code works by first splitting the input string into a list of values using the `split()` method. It then creates a dictionary with these values, and finally converts the dictionary to JSON using the `json.dumps()` method.\n",
+            "\n",
+            "Parsing failed-model added extra text\n",
+            "Solution: add explicit instructions in the system prompt\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "question=\"Review this python code and identify any issues:\\n\"\\\n",
+        "\"df['revenue]=df['qty]*df['price]\\n\"\\\n",
+        "\"result=df.groupby('dept').sum()\"\n",
+        "\n",
+        "generic_response=ask_llm(question,temperature=0.0)\n",
+        "print('Generic Result:')\n",
+        "print(generic_response[:300],'...')\n",
+        "print()\n",
+        "\n",
+        "role_response=ask_llm(\n",
+        "    question,\n",
+        "    system_message=\"You are an expert python programmer.\",\n",
+        "    temperature=0.0\n",
+        ")\n",
+        "print('Role Result:')\n",
+        "print(role_response[:300],'...')\n",
+        "print()\n",
+        "\n",
+        "role_response=ask_llm(\n",
+        "    question,system_message=\"You are an expert python programmer.\",\n",
+        "    temperature=0.2\n",
+        ")\n",
+        "print('Role Result:')\n",
+        "print(role_response[:300],'...')\n",
+        "print()\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "gCkdYKz_YI7S",
+        "outputId": "0ab9e155-de9d-49ab-8d44-fdd4a31488bf"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Generic Result:\n",
+            "Here's a review of the provided Python code:\n",
+            "\n",
+            "```python\n",
+            "# The code is missing a colon at the end of the line\n",
+            "df['revenue'] = df['qty'] * df['price']\n",
+            "\n",
+            "# The code is missing a colon at the end of the line\n",
+            "result = df.groupby('dept').sum()\n",
+            "```\n",
+            "\n",
+            "Here's the corrected code:\n",
+            "\n",
+            "```python\n",
+            "df['revenue'] = df[' ...\n",
+            "\n",
+            "Role Result:\n",
+            "Here's a review of the provided Python code:\n",
+            "\n",
+            "```python\n",
+            "df['revenue'] = df['qty'] * df['price']\n",
+            "result = df.groupby('dept').sum()\n",
+            "```\n",
+            "\n",
+            "**Issues:**\n",
+            "\n",
+            "1. **Typo in column name**: There's a typo in the column name 'revenue'. It should be `df['revenue'] = df['qty'] * df['price']`.\n",
+            "\n",
+            "2. **Missing error han ...\n",
+            "\n",
+            "Role Result:\n",
+            "Here's a review of the provided Python code:\n",
+            "\n",
+            "```python\n",
+            "df['revenue'] = df['qty'] * df['price']\n",
+            "result = df.groupby('dept').sum()\n",
+            "```\n",
+            "\n",
+            "**Issues:**\n",
+            "\n",
+            "1.  **Typo in column name**: There's a typo in the column name `df['revenue']`. It should be `df['revenue'] =` instead of `df['revenue]=`.\n",
+            "\n",
+            "2.  **Missin ...\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "prompt=\"Give me one creative name for a data analytics startup.\"\n",
+        "print('===Temperature Experiment===')\n",
+        "for temp in [0.0,0.5,1.0]:\n",
+        "  response =ask_llm(prompt, temperature=temp)\n",
+        "  print(f'Temperature={temp}: {response.strip()}')\n",
+        "  time.sleep(1)\n",
+        "\n",
+        "  print()\n",
+        "  print('Observation :')\n",
+        "  print(' temperature=0.0 same or very similar answer every run (deterministic)')\n",
+        "  print('temperature=0.5 some varaition')\n",
+        "  print('temperature=1.0 new answer every run (non-deterministic)')\n"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Iya9fTltcUBO",
+        "outputId": "d0d65d6c-5090-4c70-b763-816ebca56448"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "===Temperature Experiment===\n",
+            "Temperature=0.0: Here's a creative name for a data analytics startup:\n",
+            "\n",
+            "**Nexa Insights**\n",
+            "\n",
+            "\"Nexa\" suggests connection and linkages, implying the ability to connect disparate data points and provide valuable insights. This name conveys the idea of a startup that helps businesses navigate complex data landscapes and uncover hidden patterns and trends.\n",
+            "\n",
+            "Observation :\n",
+            " temperature=0.0 same or very similar answer every run (deterministic)\n",
+            "temperature=0.5 some varaition\n",
+            "temperature=1.0 new answer every run (non-deterministic)\n",
+            "Temperature=0.5: Here's a creative name for a data analytics startup: \n",
+            "\n",
+            "\"InsightSphere\"\n",
+            "\n",
+            "This name suggests a comprehensive and all-encompassing approach to data analysis, with \"Insight\" implying a deep understanding of the data and \"Sphere\" implying a wide and inclusive scope.\n",
+            "\n",
+            "Observation :\n",
+            " temperature=0.0 same or very similar answer every run (deterministic)\n",
+            "temperature=0.5 some varaition\n",
+            "temperature=1.0 new answer every run (non-deterministic)\n",
+            "Temperature=1.0: One creative name for a data analytics startup could be:\n",
+            "\n",
+            "\"Kairos Insights\"\n",
+            "\n",
+            "\"Kairos\" is a Greek word meaning \"the opportune moment\" or \"the right time.\" It suggests that the startup's data analytics can help businesses make informed decisions at the right moment, leading to increased efficiency and success. The name also adds a touch of sophistication and uniqueness, making it stand out in the competitive startup landscape.\n",
+            "\n",
+            "Observation :\n",
+            " temperature=0.0 same or very similar answer every run (deterministic)\n",
+            "temperature=0.5 some varaition\n",
+            "temperature=1.0 new answer every run (non-deterministic)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "invoice_text=\"Invoice #2024-001 from TECHWORLD SOLUTIONS dated 15th january 2024.Amount : 45000 for laptop\"\n",
+        "\n",
+        "weak_response=ask_llm(f\"Clean this invoice data :{invoice_text}\",\n",
+        "                      temperature=0.3)\n",
+        "print('WEAK PROMPT OUTPUT :')\n",
+        "print(weak_response)\n",
+        "print()\n",
+        "\n",
+        "try:\n",
+        "  json.loads(weak_response)\n",
+        "  print('Successfully parsed as JSON')\n",
+        "except json.JSONDecodeError:\n",
+        "  print('Parsing failed-model added extra text')\n",
+        "  print('Solution: add explicit instructions in the system prompt')\n",
+        "\n",
+        "strong_prompt=\"\"\"You are a data extraction specialist for an accounting pipline.\n",
+        "Extract invoice data and return only a valid json object.\n",
+        "Do not include any explanation , preamble, or markdown formatting.\n",
+        "Return only the json nothing else.\n",
+        "json schema (use null for missing values):{\"invoice_id :\"string,\"vendor_name\":string(Title Case),\n",
+        "\"amount\": nujmber(no currecny symbols),\n",
+        "\"currency\": string(default INR).\n",
+        "\"Invoice data\" : string (YYYY-MM-DD),\n",
+        "\"category\": string(Electronics/Services/Accessories/Other)\n",
+        "}\"\"\"\n",
+        "\n",
+        "strong_reponse=ask_llm(\n",
+        "    f\"Extract from :{invoice_text}\",\n",
+        "    system_message=strong_prompt,\n",
+        "    temperature=0.3\n",
+        ")\n",
+        "print('STRONG PROMPT OUTPUT :')\n",
+        "print(strong_reponse)\n",
+        "\n",
+        "try:\n",
+        "  parsed=json.loads(strong_reponse)\n",
+        "  print('Successfully parsed as JSON')\n",
+        "  print(f'Invoice ID:{parsed[\"invoice_id\"]},Vendor Name:{parsed[\"vendor_name\"]}')\n",
+        "except json.JSONDecodeError:\n",
+        "  print('Parsing failed for strong prompt.')\n",
+        "  print('Response was:', strong_reponse)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "du5ifdqYfNUf",
+        "outputId": "968844c3-1e20-4316-d4ce-222eebb705b7"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "WEAK PROMPT OUTPUT :\n",
+            "Here's the cleaned invoice data:\n",
+            "\n",
+            "**Invoice Information:**\n",
+            "\n",
+            "- **Invoice Number:** 2024-001\n",
+            "- **Date:** January 15, 2024\n",
+            "- **Company Name:** Techworld Solutions\n",
+            "\n",
+            "**Invoice Details:**\n",
+            "\n",
+            "- **Description:** Laptop\n",
+            "- **Amount:** $45,000\n",
+            "\n",
+            "Parsing failed-model added extra text\n",
+            "Solution: add explicit instructions in the system prompt\n",
+            "STRONG PROMPT OUTPUT :\n",
+            "{\"invoice_id\":\"2024-001\",\"vendor_name\":\"Techworld Solutions\",\"amount\":45000,\"currency\":\"INR\",\"invoice_date\":\"2024-01-15\",\"category\":\"Electronics\"}\n",
+            "Successfully parsed as JSON\n",
+            "Invoice ID:2024-001,Vendor Name:Techworld Solutions\n"
+          ]
+        }
+      ]
+    }
+  ]
+}
